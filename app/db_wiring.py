@@ -69,6 +69,9 @@ def create_user_db(db: Session, user: UserIn):
 def get_user_by_email(db: Session, email: str):
     return db.query(UserDB).filter(UserDB.email == email).first()
 
+def get_last_data(db: Session, email:str):
+    return db.query(Paths).filter(UserDB.email == email).order_by(Paths.id.desc()).first()
+
 #Endpoints
 @api.post("/users/", response_model=UserOut)
 def create_user(user: UserIn, db: Session = Depends(get_db)):
