@@ -7,6 +7,8 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
+import os
+
 SQLALCHEMY_DATABASE_URL = "sqlite:///./app/db/eq_monitor.db"
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
 
@@ -51,7 +53,7 @@ class Paths(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, ForeignKey("users.email"))
     path = Column(String, unique=True, index=True)
-    paths = relationship("UserDB", back_populates = "paths")
+    users = relationship("UserDB", back_populates = "paths")
     
 Base.metadata.create_all(bind=engine)
 
@@ -73,4 +75,7 @@ def create_user(user: UserIn, db: Session = Depends(get_db)):
     db_user = get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
+    if not os.path.exists(f"users/{user.email}"):
+        os.mkdir(f"users/{user.email}")
     return create_user_db(db=db, user=user)
+    
