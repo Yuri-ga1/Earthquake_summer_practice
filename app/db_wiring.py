@@ -4,10 +4,13 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Date
 from sqlalchemy.orm import relationship
 
+from typing import List
+
 import os
+import datetime
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./app/db/eq_monitor.db"
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
@@ -36,9 +39,17 @@ class UserOut(BaseModel):
     class Config:
         orm_mode = True
 
-
 class UserIn(UserOut):
     password: str
+
+class MyData(BaseModel):
+    date: datetime.datetime
+    email: EmailStr
+    path: str
+
+class MyResponse(BaseModel):
+    data: List[MyData]
+
 
 #Model DB
 class UserDB(Base):
@@ -53,6 +64,8 @@ class Paths(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, ForeignKey("users.email"))
     path = Column(String, unique=True, index=True)
+    date = Column(Date)
+
     users = relationship("UserDB", back_populates = "paths")
     
 Base.metadata.create_all(bind=engine)
@@ -72,13 +85,28 @@ def get_user_by_email(db: Session, email: str):
 def get_last_data(db: Session, email:str):
     return db.query(Paths).filter(UserDB.email == email).order_by(Paths.id.desc()).first()
 
+def get_data_by_date(db: Session, email: str, date: datetime.datetime):
+    db_user = get_user_by_email(db, email=email)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db.query(Paths).filter(Paths.user_id == db_user.id, Paths.date == date).all()
+
+
 #Endpoints
 @api.post("/users/", response_model=UserOut)
 def create_user(user: UserIn, db: Session = Depends(get_db)):
     db_user = get_user_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    if not os.path.exists(f"users/{user.email}"):
-        os.mkdir(f"users/{user.email}")
     return create_user_db(db=db, user=user)
+@api.get("/users/{email}/{date}", response_model=MyData)
+def get_files(data: MyResponse, db: Session = Depends(get_db)):
+    data = get_data_by_date(db=db, email=email, date=date)
+    if not data:
+        raise HTTPException(status_code=404, detail="Jopa")
+    return data
+
+
+
+
     
