@@ -25,7 +25,7 @@ async def upload_files(user_mail: EmailStr, user_data):
     else:
         today = str(dt.now())[:-7].split()
         folder_name = today[0] + "_" + today[1]
-        os.mkdir(f"users/{EmailStr}/{folder_name}")
+        os.mkdir(f"./users/{EmailStr}/{folder_name}")
 
 
 
