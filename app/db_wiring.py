@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./app/db/eq_monitor.db"
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
@@ -43,6 +44,14 @@ class UserDB(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    paths = relationship("Paths", back_populates = "users")
+
+class Paths(Base):
+    __tablename__ = "paths"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, ForeignKey("users.email"))
+    path = Column(String, unique=True, index=True)
+    paths = relationship("UserDB", back_populates = "paths")
     
 Base.metadata.create_all(bind=engine)
 
