@@ -42,13 +42,13 @@ class UserOut(BaseModel):
 class UserIn(UserOut):
     password: str
 
-class MyData(BaseModel):
+class DateOut(BaseModel):
     date: datetime.datetime
     email: EmailStr
     path: str
 
-class MyResponse(BaseModel):
-    data: List[MyData]
+class DateIn(DateOut):
+    data: List[DateOut]
 
 
 #Model DB
@@ -99,8 +99,14 @@ def create_user(user: UserIn, db: Session = Depends(get_db)):
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     return create_user_db(db=db, user=user)
-@api.get("/users/{email}/{date}", response_model=MyData)
-def get_files(data: MyResponse, db: Session = Depends(get_db)):
+@api.get("/users/{email}", response_model = DateOut)
+def get_last_files(data: DateIn, db: Session = Depends(get_db)):
+    data = get_last_data(db=db, email=email)
+    if not data:
+        raise HTTPException(status_code=404, detail="Jopa")
+    return data
+@api.get("/users/{email}/{date}", response_model=DateOut)
+def get_files(data: DateIn, db: Session = Depends(get_db)):
     data = get_data_by_date(db=db, email=email, date=date)
     if not data:
         raise HTTPException(status_code=404, detail="Jopa")
