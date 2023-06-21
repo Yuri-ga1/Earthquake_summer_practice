@@ -26,8 +26,6 @@ async def upload_files(user_mail: EmailStr, user_data: UploadFile):
         today = str(dt.now())[:-7].split()
         folder_name = today[0] + "_" + today[1]
         os.mkdir(f"./users/{EmailStr}/{folder_name}")
-    open(f"./users/{EmailStr}/{folder_name}/{user_data.filename}", "wb") as buffer:
-    shutil.copyfileobj(user_data.file, buffer)
     return {"Message": "Successfull"}
 
 
