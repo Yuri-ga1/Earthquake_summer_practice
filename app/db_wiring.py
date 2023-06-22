@@ -49,6 +49,9 @@ class DateOut(BaseModel):
     date_eq_start: datetime.datetime
     date_eq_end: datetime.datetime
 
+    class Config:
+        orm_mode = True
+
 class DateIn(DateOut):
     data: List[DateOut]
 
@@ -99,12 +102,13 @@ def get_path(db: Session, path: str):
 def get_last_data(db: Session, email:str):
     return db.query(Paths).filter(UserDB.email == email).order_by(Paths.id.desc()).first()
 
-def get_data_by_date(db: Session, email: str, date: datetime.datetime):
+def get_data_by_date(db: Session, email: str, date: datetime.date):
     db_user = get_user_by_email(db, email=email)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     return db.query(Paths).filter(Paths.email == db_user.email, Paths.date_eq_start == date).all()
-
+# def get_data_by_interval(db: Session, email:str, data_eq_start: datetime.datetime, data_eq_end: datetime.datetime):
+#     db_
 
 #Endpoints
 @api.post("/users/", response_model=UserOut)
