@@ -45,7 +45,7 @@ class UserIn(UserOut):
 class DateOut(BaseModel):
     email: EmailStr
     path: str
-    date_upload: datetime.datetime
+    date_upload: datetime.date
     date_eq_start: datetime.datetime
     date_eq_end: datetime.datetime
 
@@ -93,6 +93,9 @@ def create_path_db(db: Session, data: DateIn):
 def get_user_by_email(db: Session, email: str):
     return db.query(UserDB).filter(UserDB.email == email).first()
 
+def get_path(db: Session, path: str):
+    return db.query(Paths).filter(Paths.path == path).first()
+
 def get_last_data(db: Session, email:str):
     return db.query(Paths).filter(UserDB.email == email).order_by(Paths.id.desc()).first()
 
@@ -100,7 +103,7 @@ def get_data_by_date(db: Session, email: str, date: datetime.datetime):
     db_user = get_user_by_email(db, email=email)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
-    return db.query(Paths).filter(Paths.user_id == db_user.id, Paths.date == date).all()
+    return db.query(Paths).filter(Paths.email == db_user.email, Paths.date_eq_start == date).all()
 
 
 #Endpoints
@@ -110,8 +113,12 @@ def create_user(user: UserIn, db: Session = Depends(get_db)):
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     return create_user_db(db=db, user=user)
-#@api.post("/users/{email}", response_model=)
-#def 
+@api.post("/users/", response_model=DateOut)
+def create_path(data: DateIn):
+    db_path = get_path(db, path = data.path)
+    if db_path:
+        raise HTTPException(status_code=400, detail="Path exists")
+    return create_path_db(db=db, path=path)
 @api.get("/users/{email}", response_model = DateOut)
 def get_last_files(data: DateIn, db: Session = Depends(get_db)):
     data = get_last_data(db=db, email=email)
