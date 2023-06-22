@@ -4,7 +4,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Date
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Date, DateTime
 from sqlalchemy.orm import relationship
 
 from typing import List
@@ -43,9 +43,11 @@ class UserIn(UserOut):
     password: str
 
 class DateOut(BaseModel):
-    date: datetime.datetime
     email: EmailStr
     path: str
+    date_upload: datetime.datetime
+    date_eq_start: datetime.datetime
+    date_eq_end: datetime.datetime
 
 class DateIn(DateOut):
     data: List[DateOut]
@@ -64,7 +66,9 @@ class Paths(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, ForeignKey("users.email"))
     path = Column(String, unique=True, index=True)
-    date = Column(Date)
+    date_upload = Column(Date)
+    date_eq_start = Column(DateTime)
+    date_eq_end = Column(DateTime)
 
     users = relationship("UserDB", back_populates = "paths")
     
@@ -78,6 +82,13 @@ def create_user_db(db: Session, user: UserIn):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+def create_path_db(db: Session, data: DateIn):
+    db_path = Paths(email = data.email, path = data.path, date_upload = data.date_upload, date_eq_start = data.date_eq_start, data_eq_end = data.date_eq_end)
+    db.add(db_path)
+    db.commit()
+    db.refresh(db_path)
+    return db_path
 
 def get_user_by_email(db: Session, email: str):
     return db.query(UserDB).filter(UserDB.email == email).first()
@@ -99,6 +110,8 @@ def create_user(user: UserIn, db: Session = Depends(get_db)):
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     return create_user_db(db=db, user=user)
+#@api.post("/users/{email}", response_model=)
+#def 
 @api.get("/users/{email}", response_model = DateOut)
 def get_last_files(data: DateIn, db: Session = Depends(get_db)):
     data = get_last_data(db=db, email=email)
