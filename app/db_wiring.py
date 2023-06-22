@@ -68,26 +68,26 @@ class Paths(Base):
     __tablename__ = "paths"
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, ForeignKey("users.email"))
-    path = Column(String, unique=True, index=True)
-    date_upload = Column(Date)
-    date_eq_start = Column(DateTime)
-    date_eq_end = Column(DateTime)
+    path = Column(String, index=True)
+    date_upload = Column(String)
+    date_eq_start = Column(String)
+    date_eq_end = Column(String)
 
     users = relationship("UserDB", back_populates = "paths")
     
 Base.metadata.create_all(bind=engine)
 
 #CRUD
-def create_user_db(db: Session, user: UserIn):
-    fake_hashed_password = user.password + "notreallyhashed"
-    db_user = UserDB(email=user.email, hashed_password=fake_hashed_password)
+def create_user_db(db: Session, email: EmailStr, password:str):
+    fake_hashed_password = password + "notreallyhashed"
+    db_user = UserDB(email=email, hashed_password=fake_hashed_password)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
 
-def create_path_db(db: Session, data: DateIn):
-    db_path = Paths(email = data.email, path = data.path, date_upload = data.date_upload, date_eq_start = data.date_eq_start, data_eq_end = data.date_eq_end)
+def create_path_db(db: Session, email: str, path: str, date_upload: str, date_eq_start: str, date_eq_end: str):
+    db_path = Paths(email = email, path = path, date_upload = date_upload, date_eq_start = date_eq_start, date_eq_end = date_eq_end)
     db.add(db_path)
     db.commit()
     db.refresh(db_path)
@@ -100,13 +100,14 @@ def get_path(db: Session, path: str):
     return db.query(Paths).filter(Paths.path == path).first()
 
 def get_last_data(db: Session, email:str):
-    return db.query(Paths).filter(UserDB.email == email).order_by(Paths.id.desc()).first()
+    date_upload =  db.query(Paths).filter(UserDB.email == email).order_by(Paths.id.desc()).first().date_upload
+    return db.query(Paths).filter(UserDB.email == email, Paths.date_upload == date_upload).all()
 
-def get_data_by_date(db: Session, email: str, date: datetime.date):
+def get_data_by_date(db: Session, email: str, date: str):
     db_user = get_user_by_email(db, email=email)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
-    return db.query(Paths).filter(Paths.email == db_user.email, Paths.date_eq_start == date).all()
+    return db.query(Paths).filter(Paths.email == email, Paths.date_eq_start.contains(date)).all()
 # def get_data_by_interval(db: Session, email:str, data_eq_start: datetime.datetime, data_eq_end: datetime.datetime):
 #     db_
 
