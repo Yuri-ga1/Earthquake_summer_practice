@@ -119,6 +119,7 @@ def create_path(data: DateIn):
     if db_path:
         raise HTTPException(status_code=400, detail="Path exists")
     return create_path_db(db=db, path=path)
+
 @api.get("/users/{email}", response_model = DateOut)
 def get_last_files(data: DateIn, db: Session = Depends(get_db)):
     data = get_last_data(db=db, email=email)
