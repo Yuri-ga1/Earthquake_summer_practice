@@ -7,6 +7,8 @@ class UserOut(BaseModel):
         orm_mode = True
 class UserIn(UserOut):
     password: str
+class UserToken(UserIn):
+    token: str
     
 class Paths(BaseModel):
     email: EmailStr
