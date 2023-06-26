@@ -28,8 +28,8 @@ def create_user(user: UserIn, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     new_user =  create_user_db(db=db, user=user) 
     os.makedirs(f"app/users/{user.email}")
+
     logger.info(f"Created directory for user {new_user.token}")
-    
     logger.info(f"Created user in the database: {new_user.token}")
     return new_user
 
@@ -61,6 +61,7 @@ async def get_files_by_date(email:EmailStr,date: d, db: Session = Depends(get_db
         raise HTTPException(status_code=404, detail="User not found")
     logger.info(f"Requested files for user {user.token} on {date}")
     return get_data_by_date(db=db, email=email, date=date)
+
 @api.get("/get_last_upload/{email}")
 async def get_last_upload(email:EmailStr, db: Session = Depends(get_db)):
     user = user = get_user_by_email(db=db, email=email)
@@ -69,4 +70,3 @@ async def get_last_upload(email:EmailStr, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     logger.info(f"Requested last upload for user {user.token}")
     return get_last_data(db=db, email=email)
-    

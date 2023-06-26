@@ -1,4 +1,3 @@
-
 from fastapi import Depends
 from loguru import logger
 
@@ -24,9 +23,3 @@ def get_db():
     finally:
         db.close()
         logger.info("Database session closed")
-
-
-
-
-
-    
