@@ -18,7 +18,7 @@ def create_user_db(db: Session, user: UserToken):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    logger.info(f"User created: {user.token}")
+    logger.info(f"User created: {db_user.token}")
     return db_user
 
 def create_path_db(db: Session,email: EmailStr, path:str, date_upload: str, date_eq_start: str, date_eq_end: str):
