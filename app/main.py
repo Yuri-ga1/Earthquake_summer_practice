@@ -40,9 +40,12 @@ async def upload_files(email: EmailStr, date_eq_start: dt, date_eq_end: dt, file
     if not user:
         logger.warning(f"Unauthorized attempt to upload files")
         return RedirectResponse("/users/")
-    if date_eq_start > dt(str(dt.now())[:-7]):
+    if str(date_eq_start) > str(dt.now())[:-7]:
         logger.warning(f"Input start_date > correct date")
         raise HTTPException(status_code=400, detail="Earthquake start date cann't be in the future")
+    if str(date_eq_start) > str(date_eq_end):
+        logger.warning(f"Input start_date > end_date")
+        raise HTTPException(status_code=400, detail="The date of the beginning of the earthquake cannot be later than the end")
 
     folder_name = d.today()
     if not os.path.exists(f"app/users/{email}/{folder_name}"):
