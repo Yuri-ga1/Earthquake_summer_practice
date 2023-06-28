@@ -40,8 +40,11 @@ async def upload_files(email: EmailStr, date_eq_start: dt, date_eq_end: dt, file
     if not user:
         logger.warning(f"Unauthorized attempt to upload files")
         return RedirectResponse("/users/")
-    today = str(dt.now())[:-7].split()
-    folder_name = today[0]
+    if date_eq_start > dt(str(dt.now())[:-7]):
+        logger.warning(f"Input start_date > correct date")
+        raise HTTPException(status_code=400, detail="Earthquake start date cann't be in the future")
+
+    folder_name = d.today()
     if not os.path.exists(f"app/users/{email}/{folder_name}"):
         os.makedirs(f"app/users/{email}/{folder_name}")
         logger.info(f"Created directory for user {user.token} on {folder_name}")
@@ -54,7 +57,7 @@ async def upload_files(email: EmailStr, date_eq_start: dt, date_eq_end: dt, file
     return {"Message": "Successfull"}
 
 @api.get("/get_files/{email}/{date}")
-async def get_files_by_date(email:EmailStr,date: d, db: Session = Depends(get_db)):
+async def get_files_by_date(email:EmailStr, date: d, db: Session = Depends(get_db)):
     user = user = get_user_by_email(db=db, email=email)
     if not user:
         logger.error(f"User not found")
