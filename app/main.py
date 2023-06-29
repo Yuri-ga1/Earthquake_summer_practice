@@ -28,8 +28,8 @@ def create_user(user: UserIn, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     new_user =  create_user_db(db=db, user=user) 
     os.makedirs(f"app/users/{user.email}")
+
     logger.info(f"Created directory for user {new_user.token}")
-    
     logger.info(f"Created user in the database: {new_user.token}")
     return new_user
 
@@ -40,8 +40,14 @@ async def upload_files(email: EmailStr, date_eq_start: dt, date_eq_end: dt, file
     if not user:
         logger.warning(f"Unauthorized attempt to upload files")
         return RedirectResponse("/users/")
-    today = str(dt.now())[:-7].split()
-    folder_name = today[0]
+    if str(date_eq_start) > str(dt.now())[:-7]:
+        logger.warning(f"Input start_date > correct date")
+        raise HTTPException(status_code=400, detail="Earthquake start date cann't be in the future")
+    if str(date_eq_start) > str(date_eq_end):
+        logger.warning(f"Input start_date > end_date")
+        raise HTTPException(status_code=400, detail="The date of the beginning of the earthquake cannot be later than the end")
+
+    folder_name = d.today()
     if not os.path.exists(f"app/users/{email}/{folder_name}"):
         os.makedirs(f"app/users/{email}/{folder_name}")
         logger.info(f"Created directory for user {user.token} on {folder_name}")
@@ -54,13 +60,14 @@ async def upload_files(email: EmailStr, date_eq_start: dt, date_eq_end: dt, file
     return {"Message": "Successfull"}
 
 @api.get("/get_files/{email}/{date}")
-async def get_files_by_date(email:EmailStr,date: d, db: Session = Depends(get_db)):
+async def get_files_by_date(email:EmailStr, date: d, db: Session = Depends(get_db)):
     user = user = get_user_by_email(db=db, email=email)
     if not user:
         logger.error(f"User not found")
         raise HTTPException(status_code=404, detail="User not found")
     logger.info(f"Requested files for user {user.token} on {date}")
     return get_data_by_date(db=db, email=email, date=date)
+
 @api.get("/get_last_upload/{email}")
 async def get_last_upload(email:EmailStr, db: Session = Depends(get_db)):
     user = user = get_user_by_email(db=db, email=email)
@@ -69,4 +76,3 @@ async def get_last_upload(email:EmailStr, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     logger.info(f"Requested last upload for user {user.token}")
     return get_last_data(db=db, email=email)
-    

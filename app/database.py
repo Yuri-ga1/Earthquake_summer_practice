@@ -1,4 +1,3 @@
-
 from fastapi import Depends
 from loguru import logger
 
@@ -15,6 +14,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+# Base = sqlalchemy.orm.declarative_base()
 
 def get_db():
     logger.info("Creating database session")
@@ -24,9 +24,3 @@ def get_db():
     finally:
         db.close()
         logger.info("Database session closed")
-
-
-
-
-
-    
