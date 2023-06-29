@@ -5,6 +5,8 @@ from loguru import logger
 import os, shutil
 import os.path
 import sys
+import uvicorn
+import earthquake
 from datetime import datetime as dt
 from datetime import date as d
 from .database import *
@@ -70,9 +72,21 @@ async def get_files_by_date(email:EmailStr, date: d, db: Session = Depends(get_d
 
 @api.get("/get_last_upload/{email}")
 async def get_last_upload(email:EmailStr, db: Session = Depends(get_db)):
-    user = user = get_user_by_email(db=db, email=email)
+    user = get_user_by_email(db=db, email=email)
     if not user:
         logger.error(f"User not found")
         raise HTTPException(status_code=404, detail="User not found")
     logger.info(f"Requested last upload for user {user.token}")
     return get_last_data(db=db, email=email)
+@api.get("create_plot/{email}/{folder}/{filename}")
+async def create_plot(email:EmailStr, db: Session = Depends(get_db)):
+    user = get_user_by_email(db=db, email=email)
+    if not user:
+        logger.error(f"User not found")
+        raise HTTPException(status_code=404, detail="User not found")
+    path = get_last_data(db=db, email=email)[0]["path"]
+    pass
+    
+
+
+
