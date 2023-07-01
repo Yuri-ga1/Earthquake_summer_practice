@@ -7,7 +7,7 @@ import io
 import os.path
 import sys
 import uvicorn
-import earthquake
+from earthquake.app.earthquake import plot_map, retrieve_data, _UTC
 from datetime import datetime as dt
 from datetime import date as d
 from .database import *
@@ -78,17 +78,16 @@ async def get_last_upload(email:EmailStr, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     logger.info(f"Requested last upload for user {user.token}")
     return get_last_data(db=db, email=email)
-@api.get("create_last_plot/{email}/{folder}/{filename}", response_model = Plot)
-async def create_last_plot(email:EmailStr, db: Session = Depends(get_db)):
+@api.post("/create_last_plot/")
+async def create_last_plot(email:EmailStr, plot_info: Plot, db: Session = Depends(get_db)):
     user = get_user_by_email(db=db, email=email)
     if not user:
         logger.error(f"User not found")
         raise HTTPException(status_code=404, detail="User not found")
-    filename = get_last_data(db=db, email=email)[0]["filename"]
-    path = get_last_data(db=db, email=email)[0]["path"]
-    folder = get_last_data(db=db, email=email)[0]["date_upload"]
-    date_start_eq = get_last_data(db=db, email=email)[0]["date_start_eq"]
-    date_end_eq = get_last_data(db=db, email=email)[0]["date_end_eq"]
+    data = {plot_info.datatype: retrieve_data(plot_info.path, plot_info.datatype)}
+    times = [t.replace(tzinfo=t.tzinfo or _UTC) for t in plot_info.dates]
+    plot_map(times, data, plot_info.datatype, lon_limits = plot_info.lon_limits, lat_limits = plot_info.lat_limits, ncols = len(plot_info.dates), clims = plot_info.clims)
+    return {"message":"success"}
     
     
 
