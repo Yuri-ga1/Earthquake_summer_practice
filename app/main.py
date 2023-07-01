@@ -3,6 +3,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import RedirectResponse
 from loguru import logger
 import os, shutil
+import io
 import os.path
 import sys
 import uvicorn
@@ -35,7 +36,6 @@ def create_user(user: UserIn, db: Session = Depends(get_db)):
     logger.info(f"Created user in the database: {new_user.token}")
     return new_user
 
-
 @api.post("/upload_files")
 async def upload_files(email: EmailStr, date_eq_start: dt, date_eq_end: dt, file: UploadFile, db: Session = Depends(get_db)):
     user = get_user_by_email(db=db, email=email)
@@ -57,7 +57,7 @@ async def upload_files(email: EmailStr, date_eq_start: dt, date_eq_end: dt, file
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
         logger.info(f"Uploaded file: app/users/{user.token}/{folder_name}/{file.filename}")
-    create_path_db(db=db, email=email, path=file_path, date_upload = folder_name, date_eq_start=date_eq_start, date_eq_end=date_eq_end)
+    create_path_db(db=db, email=email,filename = file.filename, path=file_path, date_upload = folder_name, date_eq_start=date_eq_start, date_eq_end=date_eq_end)
     logger.info(f"Saved file path in the database for user {user.token}")
     return {"Message": "Successfull"}
 
@@ -78,14 +78,18 @@ async def get_last_upload(email:EmailStr, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     logger.info(f"Requested last upload for user {user.token}")
     return get_last_data(db=db, email=email)
-@api.get("create_plot/{email}/{folder}/{filename}")
-async def create_plot(email:EmailStr, db: Session = Depends(get_db)):
+@api.get("create_last_plot/{email}/{folder}/{filename}", response_model = Plot)
+async def create_last_plot(email:EmailStr, db: Session = Depends(get_db)):
     user = get_user_by_email(db=db, email=email)
     if not user:
         logger.error(f"User not found")
         raise HTTPException(status_code=404, detail="User not found")
+    filename = get_last_data(db=db, email=email)[0]["filename"]
     path = get_last_data(db=db, email=email)[0]["path"]
-    pass
+    folder = get_last_data(db=db, email=email)[0]["date_upload"]
+    date_start_eq = get_last_data(db=db, email=email)[0]["date_start_eq"]
+    date_end_eq = get_last_data(db=db, email=email)[0]["date_end_eq"]
+    
     
 
 

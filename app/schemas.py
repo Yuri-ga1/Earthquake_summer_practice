@@ -17,3 +17,8 @@ class Paths(BaseModel):
 
     class Config:
         orm_mode = True
+    
+class Plot(BaseModel):
+    path: str
+    dates: list[dt]
+    markers: list[dict]

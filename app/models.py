@@ -15,6 +15,7 @@ class PathsDB(Base):
     __tablename__ = "paths"
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, ForeignKey("users.email"))
+    filename = Column(String)
     path = Column(String, index=True)
     date_upload = Column(String)
     date_eq_start = Column(String)
