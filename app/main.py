@@ -78,16 +78,24 @@ async def get_last_upload(email:EmailStr, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     logger.info(f"Requested last upload for user {user.token}")
     return get_last_data(db=db, email=email)
-@api.post("/create_last_plot/")
-async def create_last_plot(email:EmailStr, plot_info: Plot, db: Session = Depends(get_db)):
+
+@api.post("/create_plot/")
+async def create_plot(email:EmailStr, plot_info: Plot, db: Session = Depends(get_db)):
     user = get_user_by_email(db=db, email=email)
     if not user:
         logger.error(f"User not found")
         raise HTTPException(status_code=404, detail="User not found")
+    path = os.path.dirname(plot_info.path)
     data = {plot_info.datatype: retrieve_data(plot_info.path, plot_info.datatype)}
     times = [t.replace(tzinfo=t.tzinfo or _UTC) for t in plot_info.dates]
-    plot_map(times, data, plot_info.datatype, lon_limits = plot_info.lon_limits, lat_limits = plot_info.lat_limits, ncols = len(plot_info.dates), clims = plot_info.clims)
+    base_name = os.path.basename(plot_info.path)
+    file_name = os.path.splitext(base_name)[0]
+    savefig = os.path.join(path, file_name)
+    create_result_db(db=db, email=email, filename=os.path.join(file_name, ".png"), path =savefig)
+    plot_map(times, data, plot_info.datatype, lon_limits = plot_info.lon_limits, lat_limits = plot_info.lat_limits, ncols = len(plot_info.dates), clims = plot_info.clims, savefig = savefig)
     return {"message":"success"}
+
+
     
     
 
