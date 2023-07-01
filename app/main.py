@@ -90,10 +90,19 @@ async def create_plot(email:EmailStr, plot_info: Plot, db: Session = Depends(get
     times = [t.replace(tzinfo=t.tzinfo or _UTC) for t in plot_info.dates]
     base_name = os.path.basename(plot_info.path)
     file_name = os.path.splitext(base_name)[0]
-    savefig = os.path.join(path, file_name)
-    create_result_db(db=db, email=email, filename=os.path.join(file_name, ".png"), path =savefig)
+    savefig = os.path.normpath(os.path.join(path, file_name))
+    create_result_db(db=db, email=email, filename=os.path.join(file_name, ".png"), path = savefig)
     plot_map(times, data, plot_info.datatype, lon_limits = plot_info.lon_limits, lat_limits = plot_info.lat_limits, ncols = len(plot_info.dates), clims = plot_info.clims, savefig = savefig)
     return {"message":"success"}
+
+@api.get("/results/{email}")
+async def get_results(email: EmailStr, db: Session = Depends(get_db)):
+    user = get_user_by_email(db=db, email=email)
+    if not user:
+        logger.error(f"User not found")
+        raise HTTPException(status_code=404, detail="User not found")
+    logger.info(f"Requested results for user {user.token}")
+    return get_results_db(db=db, email=email)
 
 
     
