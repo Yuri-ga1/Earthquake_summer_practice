@@ -21,13 +21,22 @@ def create_user_db(db: Session, user: UserToken):
     logger.info(f"User created: {db_user.token}")
     return db_user
 
-def create_path_db(db: Session,email: EmailStr, path:str, date_upload: str, date_eq_start: str, date_eq_end: str):
+def create_path_db(db: Session,email: EmailStr, filename:str, path:str, date_upload: str, date_eq_start: str, date_eq_end: str):
     user = get_user_by_email(db=db, email=email)
-    db_path = PathsDB(email = email, path = path, date_upload = date_upload, date_eq_start = date_eq_start, date_eq_end = date_eq_end)
+    db_path = PathsDB(email = email, filename = filename, path = path, date_upload = date_upload, date_eq_start = date_eq_start, date_eq_end = date_eq_end)
     db.add(db_path)
     db.commit()
     db.refresh(db_path)
     logger.info(f"Path created for user: {user.token}")
+    return db_path
+
+def create_result_db(db: Session,email: EmailStr, filename:str, path:str):
+    user = get_user_by_email(db=db, email=email)
+    db_path = ResultDB(email = email, filename = filename, path = path)
+    db.add(db_path)
+    db.commit()
+    db.refresh(db_path)
+    logger.info(f"Result created for user: {user.token}")
     return db_path
 
 def get_user_by_email(db: Session, email: str):

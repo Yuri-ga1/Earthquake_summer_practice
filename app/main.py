@@ -3,8 +3,11 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import RedirectResponse
 from loguru import logger
 import os, shutil
+import io
 import os.path
 import sys
+import uvicorn
+from earthquake.app.earthquake import plot_map, retrieve_data, _UTC
 from datetime import datetime as dt
 from datetime import date as d
 from .database import *
@@ -33,7 +36,6 @@ def create_user(user: UserIn, db: Session = Depends(get_db)):
     logger.info(f"Created user in the database: {new_user.token}")
     return new_user
 
-
 @api.post("/upload_files")
 async def upload_files(email: EmailStr, date_eq_start: dt, date_eq_end: dt, file: UploadFile, db: Session = Depends(get_db)):
     user = get_user_by_email(db=db, email=email)
@@ -55,7 +57,7 @@ async def upload_files(email: EmailStr, date_eq_start: dt, date_eq_end: dt, file
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
         logger.info(f"Uploaded file: app/users/{user.token}/{folder_name}/{file.filename}")
-    create_path_db(db=db, email=email, path=file_path, date_upload = folder_name, date_eq_start=date_eq_start, date_eq_end=date_eq_end)
+    create_path_db(db=db, email=email,filename = file.filename, path=file_path, date_upload = folder_name, date_eq_start=date_eq_start, date_eq_end=date_eq_end)
     logger.info(f"Saved file path in the database for user {user.token}")
     return {"Message": "Successfull"}
 
@@ -70,9 +72,32 @@ async def get_files_by_date(email:EmailStr, date: d, db: Session = Depends(get_d
 
 @api.get("/get_last_upload/{email}")
 async def get_last_upload(email:EmailStr, db: Session = Depends(get_db)):
-    user = user = get_user_by_email(db=db, email=email)
+    user = get_user_by_email(db=db, email=email)
     if not user:
         logger.error(f"User not found")
         raise HTTPException(status_code=404, detail="User not found")
     logger.info(f"Requested last upload for user {user.token}")
     return get_last_data(db=db, email=email)
+
+@api.post("/create_plot/")
+async def create_plot(email:EmailStr, plot_info: Plot, db: Session = Depends(get_db)):
+    user = get_user_by_email(db=db, email=email)
+    if not user:
+        logger.error(f"User not found")
+        raise HTTPException(status_code=404, detail="User not found")
+    path = os.path.dirname(plot_info.path)
+    data = {plot_info.datatype: retrieve_data(plot_info.path, plot_info.datatype)}
+    times = [t.replace(tzinfo=t.tzinfo or _UTC) for t in plot_info.dates]
+    base_name = os.path.basename(plot_info.path)
+    file_name = os.path.splitext(base_name)[0]
+    savefig = os.path.join(path, file_name)
+    create_result_db(db=db, email=email, filename=os.path.join(file_name, ".png"), path =savefig)
+    plot_map(times, data, plot_info.datatype, lon_limits = plot_info.lon_limits, lat_limits = plot_info.lat_limits, ncols = len(plot_info.dates), clims = plot_info.clims, savefig = savefig)
+    return {"message":"success"}
+
+
+    
+    
+
+
+
