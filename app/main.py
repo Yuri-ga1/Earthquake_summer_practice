@@ -122,7 +122,7 @@ async def create_plot_dt(email: EmailStr, plot_info: PlotDT, db: Session = Depen
     if not result:
         create_result_db(db=db, email=email, filename=file_name, path=savefig)
     logger.info(f"Created distance-time plot for email: {user.token}")
-    plot_distance_time(x, y, c, plot_info.datatype, clims=plot_info.clims, savefig=savefig)
+    plot_distance_time(x, y, c, plot_info.datatype, clims=plot_info.clims, savefig=savefig, data=plot_info.dates)
     savefig +=".png"
     return FileResponse(savefig, media_type="image/png")
 
