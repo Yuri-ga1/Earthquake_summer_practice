@@ -69,6 +69,7 @@ def get_results_db(db: Session, email: str):
     logger.info(f"Getting results for user: {user.token}")
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    data = db.query(ResultDB).filter(ResultDB.email==email).all()
-    logger.info(f"Data retrieved for user: {user.token}")
+    data = db.query(ResultDB).filter(ResultDB.email == email).all()
+    logger.info(f"Result retrieved for user: {user.token}")
     return data
+

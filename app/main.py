@@ -112,7 +112,15 @@ async def create_plot_dt(email: EmailStr, plot_info: PlotDT, db: Session = Depen
     create_result_db(db=db, email=email, filename=file_name, path = savefig)
     plot_distance_time(x, y, c, plot_info.datatype, clims=plot_info.clims, savefig=savefig)
     return {"message":"success"}
-    
+
+@api.get("/results/{email}")
+async def get_results(email:EmailStr, db: Session = Depends(get_db)):
+    user = get_user_by_email(db=db, email=email)
+    if not user:
+        logger.error(f"User not found")
+        raise HTTPException(status_code=404, detail="User not found")
+    logger.info(f"Requested results for user {user.token}")
+    return get_results_db(db=db, email=email)
 
 
 
