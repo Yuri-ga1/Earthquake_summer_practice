@@ -16,7 +16,7 @@ from .models import *
 from .schemas import *
 
 
-logger.add("logs/app.log", rotation="500 MB", level="DEBUG")
+logger.add("logs/app.log", rotation="50 MB", level="DEBUG")
 logger.add(sys.stdout, level="INFO", colorize=True)
 
 
