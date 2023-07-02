@@ -7,7 +7,7 @@ import io
 import os.path
 import sys
 import uvicorn
-from earthquake.app.earthquake import plot_map, retrieve_data, _UTC, plot_distance_time, get_dist_time
+from earthquake.app.earthquake import plot_map, retrieve_data, _UTC, plot_distance_time, get_dist_time, get_sites_coords, select_visible_sats_data, get_visible_sats_names, select_sats_by_params, select_reoder_data, get_dtecs, plot_single_sat
 from datetime import datetime as dt
 from datetime import date as d
 from .database import *
@@ -96,7 +96,7 @@ async def create_plot(email: EmailStr, plot_info: Plot, db: Session = Depends(ge
     times = [t.replace(tzinfo=t.tzinfo or _UTC) for t in plot_info.dates]
     base_name = os.path.basename(plot_info.path)
     file_name = os.path.splitext(base_name)[0]
-    savefig = os.path.join(path, file_name)
+    savefig = os.path.join(path, file_name).replace('\\', '/')
     result = get_result_db_by_path(db=db, email=email,path = savefig)
     if not result:
         create_result_db(db=db, email=email, filename=file_name, path=savefig)
@@ -114,7 +114,7 @@ async def create_plot_dt(email: EmailStr, plot_info: PlotDT, db: Session = Depen
         raise HTTPException(status_code=404, detail="User not found")
     path = os.path.dirname(plot_info.path)
     data = retrieve_data(plot_info.path, plot_info.datatype)
-    x, y, c = get_dist_time(data, plot_info.markers)
+    x, y, c = get_dist_time(data, plot_info.eps)
     base_name = os.path.basename(plot_info.path)
     file_name = os.path.splitext(base_name)[0] + "dt"
     savefig = os.path.join(path, file_name).replace('\\', '/')
@@ -126,6 +126,38 @@ async def create_plot_dt(email: EmailStr, plot_info: PlotDT, db: Session = Depen
     savefig +=".png"
     return FileResponse(savefig, media_type="image/png")
 
+@api.post("/create_plot_single_sat")
+async def create_plot_ss(email: EmailStr, plot_info: PlotSS, db: Session = Depends(get_db)):
+    user = get_user_by_email(db=db, email=email)
+    logger.info(f"Received request to create distance-time plot for email: {user.token}")
+    if not user:
+        logger.error(f"User not found")
+        raise HTTPException(status_code=404, detail="User not found")
+    path = os.path.dirname(plot_info.path)
+    coords = get_sites_coords(plot_info.path, exclude_sites=["guru"])
+    sites = [site for site in coords]
+    data = select_visible_sats_data(plot_info.path, sites, tcheck = plot_info.date)
+    visible_sats = get_visible_sats_names(data)
+    sats_count = select_sats_by_params(data, visible_sats, plot_info.date)
+    _data = select_reoder_data(data, sats_count)
+    dtecs = get_dtecs(_data, sort_type=plot_info.sort_type, sat=plot_info.sat, threshold=0.5)
+    sites = []
+    for d in dtecs[plot_info.sat]:
+        sites.append(d['site'])
+    base_name = os.path.basename(plot_info.path)
+    file_name = os.path.splitext(base_name)[0] + "ss"
+    savefig = os.path.join(path, file_name).replace('\\', '/')
+    result = get_result_db_by_path(db=db, email=email,path = savefig)
+    if not result:
+        create_result_db(db=db, email=email, filename=file_name, path=savefig)
+    logger.info(f"Created satellite plot for email: {user.token}")
+    plot_single_sat(dtecs, plot_info.sat, plot_info.eps, plot_info.plot_product,
+                plot_info.limit,
+                plot_info.shift, plot_info.site_labels, savefig)
+    savefig +=".png"          
+    return FileResponse(savefig, media_type="image/png")
+    
+    
 @api.get("/results/{email}")
 async def get_results(email:EmailStr, db: Session = Depends(get_db)):
     user = get_user_by_email(db=db, email=email)
