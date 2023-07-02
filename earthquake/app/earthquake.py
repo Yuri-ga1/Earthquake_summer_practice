@@ -545,7 +545,7 @@ def get_dist_time(data, eq_location, direction='all'):
         c.extend(vals)
     return x, y, c
 
-def plot_distance_time(x, y, c, ptype, sort = True, line=dict(), clims=C_LIMITS, dmax=1750, data=[]):
+def plot_distance_time(x, y, c, ptype, sort = True, line=dict(), clims=C_LIMITS, dmax=1750, data=[], savefig=''):
     c_abs = [abs(_c) for _c in c]
     if sort:    
         x = [i for _, i in sorted(zip(c_abs, x))]
@@ -566,14 +566,17 @@ def plot_distance_time(x, y, c, ptype, sort = True, line=dict(), clims=C_LIMITS,
     plt.clim(clims[ptype][0], clims[ptype][1])
     plt.ylabel('Distance, km')
     plt.xlabel('UTC for February 6, 2023')
-    print(times[0], times[-1])
-    plt.xlim(times[0], times[-1])
+    if times:
+        print(times[0], times[-1])
+        plt.xlim(times[0], times[-1])
     plt.ylim(0, dmax)
     # plot vertical lines for earthquake times
     for epc, params in EPICENTERS.items():
         plt.axvline(x=params['time'], color='black', linewidth=3)
     cbar.ax.set_ylabel( clims[ptype][2], rotation=-90, va="bottom")
     plot_ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+    plt.savefig(savefig)
+    plt.close()
     
 def plot_line(velocity, start, style='solid'):
     timestep = 30
