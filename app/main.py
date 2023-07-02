@@ -1,6 +1,6 @@
 from pydantic import EmailStr, BaseModel
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, FileResponse
 from loguru import logger
 import os, shutil
 import io
@@ -49,6 +49,11 @@ async def upload_files(email: EmailStr, date_eq_start: dt, date_eq_end: dt, file
         logger.warning(f"Input start_date > end_date")
         raise HTTPException(status_code=400, detail="The date of the beginning of the earthquake cannot be later than the end")
 
+    path = get_path(db=db, email=email, filename=file.filename)
+    if path:
+        logger.warning("File already uploaded")
+        raise HTTPException(status_code=400, detail="File already uploaded")
+
     folder_name = d.today()
     if not os.path.exists(f"app/users/{email}/{folder_name}"):
         os.makedirs(f"app/users/{email}/{folder_name}")
@@ -80,8 +85,9 @@ async def get_last_upload(email:EmailStr, db: Session = Depends(get_db)):
     return get_last_data(db=db, email=email)
 
 @api.post("/create_plot/")
-async def create_plot(email:EmailStr, plot_info: Plot, db: Session = Depends(get_db)):
+async def create_plot(email: EmailStr, plot_info: Plot, db: Session = Depends(get_db)):
     user = get_user_by_email(db=db, email=email)
+    logger.info(f"Received request to create plot for email: {user.token}")
     if not user:
         logger.error(f"User not found")
         raise HTTPException(status_code=404, detail="User not found")
@@ -91,13 +97,18 @@ async def create_plot(email:EmailStr, plot_info: Plot, db: Session = Depends(get
     base_name = os.path.basename(plot_info.path)
     file_name = os.path.splitext(base_name)[0]
     savefig = os.path.join(path, file_name)
-    create_result_db(db=db, email=email, filename=os.path.join(file_name, ".png"), path =savefig)
-    plot_map(times, data, plot_info.datatype, lon_limits = plot_info.lon_limits, lat_limits = plot_info.lat_limits, ncols = len(plot_info.dates), clims = plot_info.clims, savefig = savefig)
-    return {"message":"success"}
+    result = get_result_db_by_path(db=db, email=email,path = savefig)
+    if not result:
+        create_result_db(db=db, email=email, filename=file_name, path=savefig)
+    logger.info(f"Created plot for email: {user.token}")
+    plot_map(times, data, plot_info.datatype, lon_limits=plot_info.lon_limits, lat_limits=plot_info.lat_limits, ncols=len(plot_info.dates), clims=plot_info.clims, savefig=savefig)
+    savefig += ".png"
+    return FileResponse(savefig, media_type="image/png")
 
 @api.post("/create_plot_distance_time/")
 async def create_plot_dt(email: EmailStr, plot_info: PlotDT, db: Session = Depends(get_db)):
     user = get_user_by_email(db=db, email=email)
+    logger.info(f"Received request to create distance-time plot for email: {user.token}")
     if not user:
         logger.error(f"User not found")
         raise HTTPException(status_code=404, detail="User not found")
@@ -105,13 +116,15 @@ async def create_plot_dt(email: EmailStr, plot_info: PlotDT, db: Session = Depen
     data = retrieve_data(plot_info.path, plot_info.datatype)
     x, y, c = get_dist_time(data, plot_info.markers)
     base_name = os.path.basename(plot_info.path)
-    file_name = os.path.splitext(base_name)[0]+"dt"
-    print(file_name)
+    file_name = os.path.splitext(base_name)[0] + "dt"
     savefig = os.path.join(path, file_name).replace('\\', '/')
-    print(savefig)
-    create_result_db(db=db, email=email, filename=file_name, path = savefig)
+    result = get_result_db_by_path(db=db, email=email,path = savefig)
+    if not result:
+        create_result_db(db=db, email=email, filename=file_name, path=savefig)
+    logger.info(f"Created distance-time plot for email: {user.token}")
     plot_distance_time(x, y, c, plot_info.datatype, clims=plot_info.clims, savefig=savefig)
-    return {"message":"success"}
+    savefig +=".png"
+    return FileResponse(savefig, media_type="image/png")
 
 @api.get("/results/{email}")
 async def get_results(email:EmailStr, db: Session = Depends(get_db)):
