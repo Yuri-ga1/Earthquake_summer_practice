@@ -26,9 +26,9 @@ class Plot(BaseModel):
          "2023-02-06 01:37:00"
   ]
     datatype: str = "ROTI"
-    markers: dict = {"lat": 37.220, 
+    markers: list[dict] = [{"lat": 37.220, 
                         "lon": 37.019, 
-                        "time": "2023-02-06 01:17:34"}
+                        "time": "2023-02-06 01:17:34"}]
     lon_limits: tuple[int, int] = [25,50]
     lat_limits: tuple[int, int] = [25,50]
     clims: dict = {"ROTI": [-0,0.5,"TECu/min"]}
@@ -36,10 +36,23 @@ class Plot(BaseModel):
 class PlotDT(BaseModel):
     path: str = "app/users/user@example.com/2023-07-01/roti_01_17.h5"
     datatype: str = "ROTI"
-    markers: dict = {"lat": 37.220, 
+    eps: dict = {"lat": 37.220, 
                         "lon": 37.019, 
                         "time": "2023-02-06 01:17:34"}
     clims: dict = {"ROTI": [-0,0.5,"TECu/min"]}
+
+class PlotSS(BaseModel):
+  path: str = "app/users/user@example.com/2023-07-01/roti_01_17.h5"
+  date: dt = "2023-02-06 10:38:00"
+  eps: dict = {"lat": 37.220, 
+                        "lon": 37.019, 
+                        "time": "2023-02-06 01:17:34"}
+  plot_product: str = "roti"
+  sort_type:str = "max"
+  sat: str = "E08"
+  limit: tuple = [0, 1200]
+  shift: float = 0.5
+  site_labels: bool = True
 
 '''
 

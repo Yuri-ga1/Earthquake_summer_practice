@@ -8,8 +8,7 @@ import datetime
 import cartopy.crs as ccrs
 from cartopy import feature
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-from datetime import (datetime, 
-                      timedelta)
+from datetime import datetime, timedelta
 from dateutil import tz
 from collections import defaultdict
 from pathlib import Path
@@ -324,7 +323,7 @@ def select_reoder_data(data, sats_count):
 def plot_single_sat(data_plot, sat, epc, plot_product, 
                     limits=(3600,3600),
                     shift=0.5,
-                    site_labels=False):
+                    site_labels=False, savefig=''):
     i = 0
     plt.figure(figsize=(6, 13))
     plt.rcParams.update(DEFAULT_PARAMS)
@@ -341,11 +340,12 @@ def plot_single_sat(data_plot, sat, epc, plot_product,
         plt.plot(_t, _val+i*shift, marker='.')
         locs.append(i*shift)
         i = i + 1
-        plt.axvline(x=epc['time'], color='black', linewidth=3)
+        x = datetime.strptime(epc['time'], '%Y-%m-%d %H:%M:%S')
+        plt.axvline(x=x, color='black', linewidth=3)
         sites.append(d['site'])
     print('Sorted', sites)
-    plt.xlim(epc['time'] -timedelta(0, limits[0]),
-             epc['time'] +timedelta(0, limits[1]),)
+    plt.xlim(x - timedelta(0, limits[0]),
+             x + timedelta(0, limits[1]),)
     # to make grid lines on top and bottom
     locs = [-2*shift, -shift] + locs + [i * shift, (i+1) * shift]
     sites = ['']*2 + sites + ['']*2
@@ -356,7 +356,7 @@ def plot_single_sat(data_plot, sat, epc, plot_product,
     plt.title('Satellite '+sat)
     plt.grid()
     plt.xlabel('UTC for February 6, 2023')
-    plt.show()
+    plt.savefig(savefig)
 
 #Calculate rate of tec#
 def get_dtecs(data,
