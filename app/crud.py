@@ -43,9 +43,9 @@ def get_user_by_email(db: Session, email: str):
     logger.info(f"Getting user by email")
     return db.query(UserDB).filter(UserDB.email == email).first()
 
-def get_path(db: Session, path: str):
+def get_path(db: Session, email:str, filename: str):
     logger.info(f"Getting path")
-    return db.query(PathsDB).filter(PathsDB.path == path).first()
+    return db.query(PathsDB).filter(PathsDB.email == email, PathsDB.path.contains(filename)).first()
 
 def get_last_data(db: Session, email:str):
     user = get_user_by_email(db=db, email=email)
@@ -70,6 +70,15 @@ def get_results_db(db: Session, email: str):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     data = db.query(ResultDB).filter(ResultDB.email == email).all()
+    logger.info(f"Result retrieved for user: {user.token}")
+    return data
+
+def get_result_db_by_path(db: Session, email: str, path:str):
+    user = get_user_by_email(db, email=email)
+    logger.info(f"Getting results for user: {user.token}")
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    data = db.query(ResultDB).filter(ResultDB.email == email, ResultDB.path == path).first()
     logger.info(f"Result retrieved for user: {user.token}")
     return data
 
