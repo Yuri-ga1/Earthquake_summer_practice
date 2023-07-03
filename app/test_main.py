@@ -1,3 +1,5 @@
+import os
+import shutil
 import pytest
 from fastapi.testclient import TestClient
 from .main import api
@@ -6,6 +8,10 @@ from .main import api
 client = TestClient(api)
 
 def test_create_user_true(email = "user12@example.com"):
+    user_dir = os.path.join("app/users", email)
+    if os.path.exists(user_dir):
+        shutil.rmtree(user_dir)
+    
     response = client.post("/users/",
                            json={"email" : email, "password" : "12345678"})
     assert response.status_code == 200
@@ -13,9 +19,9 @@ def test_create_user_true(email = "user12@example.com"):
         "email" : email
     }
 
-def test_create_user_fail():
+def test_create_user_fail(email = "user@example.com"):
     response = client.post("/users/",
-                           json={"email" : "user@example.com", "password" : "12345678"})
+                           json={"email" : email, "password" : "12345678"})
     assert response.status_code == 400
     assert response.json() == {"detail" : "Email already registered"}
 
