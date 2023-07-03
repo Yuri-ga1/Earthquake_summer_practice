@@ -19,7 +19,7 @@ class Paths(BaseModel):
         orm_mode = True
     
 class Plot(BaseModel):
-    path: str = "app/users/user@example.com/2023-07-01/roti_01_17.h5"
+    path: str = "app/users/user@example.com/2023-07-03/roti_01_17.h5"
     dates: list[dt] = [
     "2023-02-06 01:17:00",
          "2023-02-06 01:32:00",
@@ -34,7 +34,7 @@ class Plot(BaseModel):
     clims: dict = {"ROTI": [-0,0.5,"TECu/min"]}
 
 class PlotDT(BaseModel):
-    path: str = "app/users/user@example.com/2023-07-01/roti_01_17.h5"
+    path: str = "app/users/user@example.com/2023-07-03/roti_01_17.h5"
     datatype: str = "ROTI"
     eps: dict = {"lat": 37.220, 
                         "lon": 37.019, 
@@ -42,17 +42,31 @@ class PlotDT(BaseModel):
     clims: dict = {"ROTI": [-0,0.5,"TECu/min"]}
 
 class PlotSS(BaseModel):
-  path: str = "app/users/user@example.com/2023-07-01/roti_01_17.h5"
+  path: str = "app/users/user@example.com/2023-07-03/region_2023-02-06.h5"
   date: dt = "2023-02-06 10:38:00"
-  eps: dict = {"lat": 37.220, 
-                        "lon": 37.019, 
-                        "time": "2023-02-06 01:17:34"}
+  eps: dict = {"lat": 38.016, 
+                "lon": 37.206, 
+              "time": "2023-02-06 10:24:50"}
   plot_product: str = "roti"
   sort_type:str = "max"
   sat: str = "E08"
   limit: tuple = [0, 1200]
   shift: float = 0.5
   site_labels: bool = True
+
+class PlotS(BaseModel):
+  path: str = "app/users/user@example.com/2023-07-03/region_2023-02-06.h5"
+  sites: list[str] = ['mers', 'nico', 'bshm', 'csar', 'mrav', 'nzrt', 'hama',
+         'hrmn', 'drag', 'kabr', 'katz', 'zkro', 'tmar', 'ista']
+  sat: str = 'G17'
+  datatype: str = 'roti'
+  shift: float = 0.5
+
+class PlotAS(BaseModel):
+  path: str = "app/users/user@example.com/2023-07-03/region_2023-02-06.h5"
+  site: str = "23ey"
+  datatype: str = 'roti'
+  shift: float = 0.5
 
 '''
 
