@@ -4,7 +4,7 @@
 
 ## Установка
 - Скопируйте репозиторий\
-```git clonehttps://github.com/Yuri-ga1/Earthquake_summer_practice.git```
+```git clone https://github.com/Yuri-ga1/Earthquake_summer_practice.git```
 - Создайте окружение\
 ```conda create -n eq python=3.11```
 - Активируйте окружение\
