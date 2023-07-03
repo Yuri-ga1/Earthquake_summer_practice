@@ -40,6 +40,10 @@ class PlotDT(BaseModel):
                         "lon": 37.019, 
                         "time": "2023-02-06 01:17:34"}
     clims: dict = {"ROTI": [-0,0.5,"TECu/min"]}
+    dates: list[dt] = [
+    "2023-02-06 00:00:00",
+         "2023-02-06 03:00:00"
+  ]
 
 class PlotSS(BaseModel):
   path: str = "app/users/user@example.com/2023-07-03/region_2023-02-06.h5"
