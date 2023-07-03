@@ -585,7 +585,7 @@ def plot_line(velocity, start, style='solid'):
     plt.plot(dtimes, line, linestyle=style, color='black', zorder=5, linewidth=4)   
 
 #Support code#
-def plot_all_sats(local_file, site, product, shift=0.5):
+def plot_all_sats(local_file, site, product, shift=0.5, savefig=''):
     f = h5py.File(local_file)
     plt.figure(figsize=(10, 13))
     plot_ax = plt.axes()
@@ -607,8 +607,9 @@ def plot_all_sats(local_file, site, product, shift=0.5):
     plot_ax.axvline(x=datetime(2023, 2, 6, 10, 24), color='red')
     plot_ax.axvline(x=datetime(2023, 2, 6, 1, 17), color='red')
     plot_ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+    plt.savefig(savefig)
     
-def plot_sites(local_file, plot_sat, sites, product, shift=0.5):
+def plot_sites(local_file, plot_sat, sites, product, shift=0.5, savefig=''):
     f = h5py.File(local_file)
     plt.figure(figsize=(10, 13))
     plot_ax = plt.axes()
@@ -635,3 +636,4 @@ def plot_sites(local_file, plot_sat, sites, product, shift=0.5):
     plot_ax.axvline(x=datetime(2023, 2, 6, 10, 24), color='red')
     plot_ax.axvline(x=datetime(2023, 2, 6, 1, 17), color='red')
     plot_ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M")) 
+    plt.savefig(savefig)
